@@ -1,0 +1,84 @@
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>NYC Dog Heatmap</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <style>
+      body { margin: 0; padding: 0; }
+      #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+      .mapboxgl-popup {
+        max-width: 300px;
+        font: 12px/18px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+  <div id="map"></div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoid2pydXBwZWwiLCJhIjoiY21jMmN6YWkyMDdkMzJtcTV2Y25ibXRycyJ9.LcKQXsI9YAzf_FjzRA3H5g';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/light-v10',
+      center: [-73.95, 40.72],
+      zoom: 10
+    });
+
+    map.on('load', () => {
+      map.addSource('dogs', {
+        type: 'geojson',
+        data: 'nyc_dog_data_custom_neighborhood_map.geojson'
+      });
+
+      map.addLayer({
+        id: 'dog-heat',
+        type: 'fill',
+        source: 'dogs',
+        paint: {
+          'fill-color': [
+            'interpolate',
+            ['linear'],
+            ['get', 'dog_count'],
+            0, '#fff5f0',
+            100, '#fcbba1',
+            500, '#fc9272',
+            1000, '#fb6a4a',
+            3000, '#de2d26',
+            5000, '#a50f15'
+          ],
+          'fill-opacity': 0.7,
+          'fill-outline-color': '#ccc'
+        }
+      });
+
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+      });
+
+      map.on('mousemove', 'dog-heat', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+        const props = e.features[0].properties;
+        const html = `
+          <strong>${props.neighborhood_name}</strong><br>
+          ZIP Code: ${props.postalCode}<br>
+          Dogs: ${props.dog_count}<br>
+          Population: ${props.Population}<br>
+          Dogs per 1k residents: ${(props.dogs_per_capita * 1000).toFixed(2)}<br>
+          Most popular name: ${props.most_popular_name} (${props.most_popular_name_count})
+        `;
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+      });
+
+      map.on('mouseleave', 'dog-heat', () => {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+    });
+  </script>
+  </body>
+  </html>
