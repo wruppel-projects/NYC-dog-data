@@ -1,38 +1,97 @@
-import type React from "react"
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { Github, ExternalLink } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 interface ProjectCardProps {
   title: string
   description: string
-  imageUrl: string
-  linkUrl: string
+  summary: string
+  image: string
   technologies: string[]
+  githubUrl?: string
+  liveUrl?: string
+  isComingSoon?: boolean
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, imageUrl, linkUrl, technologies }) => {
+export function ProjectCard({
+  title,
+  description,
+  summary,
+  image,
+  technologies,
+  githubUrl,
+  liveUrl,
+  isComingSoon = false,
+}: ProjectCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <img className="w-full h-48 object-cover" src={imageUrl || "/placeholder.svg"} alt={title} />
-      <div className="p-4">
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-gray-700 text-base mb-4">{description}</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {technologies.map((tech) => (
-            <span key={tech} className="bg-gray-200 text-gray-700 rounded-full px-3 py-1 text-sm font-semibold">
-              {tech}
-            </span>
-          ))}
+    <Card
+      className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardHeader className="p-0">
+        <div className="relative h-60 w-full overflow-hidden">
+          <Image
+            src={image || "/placeholder.svg"}
+            fill
+            alt={title}
+            className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
+          />
         </div>
-        <a
-          href={linkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          View Project
-        </a>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <CardTitle className="text-2xl">{title}</CardTitle>
+          <CardDescription className="line-clamp-2 text-base mt-2">{description}</CardDescription>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {technologies.map((tech) => (
+              <Badge key={tech}>{tech}</Badge>
+            ))}
+          </div>
+        </div>
+        <p className="mt-4 text-muted-foreground">{summary}</p>
+      </CardContent>
+      <CardFooter className="p-6 pt-0">
+        <div className="flex w-full items-center justify-between">
+          {isComingSoon ? (
+            <Button variant="outline" disabled className="gap-1 bg-background text-foreground">
+              Coming Soon
+            </Button>
+          ) : githubUrl ? (
+            <Link href={githubUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="gap-1 bg-background text-foreground">
+                <Github className="h-4 w-4" />
+                View on GitHub
+              </Button>
+            </Link>
+          ) : liveUrl ? (
+            <Link href={liveUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="gap-1 bg-background text-foreground">
+                <ExternalLink className="h-4 w-4" />
+                Visit Website
+              </Button>
+            </Link>
+          ) : null}
+
+          {!isComingSoon && liveUrl && githubUrl && (
+            <Link href={liveUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="icon">
+                <ExternalLink className="h-4 w-4" />
+                <span className="sr-only">Visit Live Site</span>
+              </Button>
+            </Link>
+          )}
+        </div>
+      </CardFooter>
+    </Card>
   )
 }
-
-export default ProjectCard
